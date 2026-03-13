@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, ActivityIndicator } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSelector } from "react-redux";
 
@@ -21,23 +21,27 @@ export default function Weekly() {
   const [selected, setSelected] = useState({ day: "", hour: "" });
   const [tempText, setTempText] = useState("");
   const [currentTime, setCurrentTime] = useState({ day: "", hourIndex: null });
+  const [loading, setLoading] = useState(true);
   const Theme = useSelector((state) => state.profile.theme);
-   const THEMES = {
-  light: { label: 'Light', backgroundColor: '#fff', textColor: '#000' },
-  dark: { label: 'Dark', backgroundColor: '#222', textColor: '#fff' },
-};
-  
- 
+  const THEMES = {
+    light: { label: 'Light', backgroundColor: '#fff', textColor: '#000' },
+    dark: { label: 'Dark', backgroundColor: '#222', textColor: '#fff' },
+  };
+
+
 
   // Determine current day and hour index every minute
   useEffect(() => {
     // Load routine from AsyncStorage on mount
     const loadRoutine = async () => {
+      setLoading(true);
       try {
         const stored = await AsyncStorage.getItem("weeklyRoutine");
         if (stored) setRoutine(JSON.parse(stored));
       } catch (e) {
         // handle error if needed
+      } finally {
+        setLoading(false);
       }
     };
     loadRoutine();
@@ -49,9 +53,9 @@ export default function Weekly() {
       //console.log(routine);
       try {
         await AsyncStorage.setItem("weeklyRoutine", JSON.stringify(routine));
-      
+
       } catch (e) {
-        console.error("Error saving routine:", e);  
+        console.error("Error saving routine:", e);
       }
     };
     if (Object.keys(routine).length > 0) {
@@ -86,11 +90,16 @@ export default function Weekly() {
   };
 
   return (
-    <View style={{backgroundColor : THEMES[Theme].backgroundColor}}  className="flex-1 pt-12">
+    <View style={{ backgroundColor: THEMES[Theme || 'light'].backgroundColor }} className="flex-1 pt-12">
+      {loading && (
+        <View className="absolute inset-0 z-50 flex items-center justify-center bg-black/20">
+          <ActivityIndicator size="large" color="#3b82f6" />
+        </View>
+      )}
       <Text className="text-2xl font-bold text-center text-blue-500 mb-3">
         Weekly Routine
       </Text>
-        
+
 
       <ScrollView horizontal>
         <View>
@@ -108,7 +117,7 @@ export default function Weekly() {
 
           </View>
 
-        
+
 
           {/* Body */}
           <ScrollView style={{ height: "85%" }}>
@@ -130,19 +139,17 @@ export default function Weekly() {
                   return (
                     <TouchableOpacity
                       key={key}
-                      className={`w-28 h-14 border border-gray-200 items-center justify-center ${
-                        isCurrent ? "bg-blue-500" : currentTime.day == day ? "bg-blue-200" : "bg-white/40"
-                      } rounded-sm`}
+                      className={`w-28 h-14 border border-gray-200 items-center justify-center ${isCurrent ? "bg-blue-500" : currentTime.day == day ? "bg-blue-200" : "bg-white/40"
+                        } rounded-sm`}
                       onPress={() => openEdit(day, hour)}
                     >
                       <Text
-                        className={`text-center px-1 ${
-                          isCurrent
-                            ? "text-white font-semibold"
-                            : routine[key]
-                            ? `text-${Theme === "dark" ? "white" :"blue-500"} `
+                        className={`text-center px-1 ${isCurrent
+                          ? "text-white font-semibold"
+                          : routine[key]
+                            ? `text-${Theme === "dark" ? "white" : "blue-500"} `
                             : "text-black/20"
-                        }`}
+                          }`}
                         numberOfLines={2}
                       >
                         {routine[key] || "Edit"}
@@ -165,20 +172,20 @@ export default function Weekly() {
             </Text>
 
             <ScrollView className="flex-1 mb-3">
-              
-               <TextInput
+
+              <TextInput
                 value={tempText}
                 onChangeText={setTempText}
                 placeholder="Write your activity, goals, or notes here..."
                 multiline
                 textAlignVertical="top"
                 className="border border-gray-300 rounded-lg p-3 min-h-[200px] text-base"
-              /> 
+              />
             </ScrollView>
 
             <View className="flex-row justify-end items-center gap-4 space-x-5">
               <TouchableOpacity
-              
+
                 className="border-[1px] rounded-xl p-2"
                 onPress={() => setModalVisible(false)}
               >

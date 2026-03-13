@@ -3,9 +3,9 @@ import { View, Text, Image, TouchableOpacity, FlatList } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TextInput } from 'react-native';
-import { AntDesign,Feather } from '@expo/vector-icons';
-import {setProfileimg,setUsername} from "../src/store";
-import { useDispatch } from "react-redux";
+import { AntDesign, Feather } from '@expo/vector-icons';
+import { setProfileimg, setUsername } from "../src/store";
+import { useDispatch, useSelector } from "react-redux";
 
 const AVATARS = [
     require('../assets/img.jpg'),
@@ -19,117 +19,120 @@ export default function Settings() {
     const [theme, setTheme] = useState('light');
     const [uploadedImages, setUploadedImages] = useState([]);
     const dispatch = useDispatch();
+    const Theme = useSelector((state) => state.profile.theme);
+    const THEMES_STYLE = {
+        light: { label: 'Light', backgroundColor: '#fff', textColor: '#000' },
+        dark: { label: 'Dark', backgroundColor: '#222', textColor: '#fff' },
+    };
 
-    
+
     const THEMES = [
         { key: 'light', label: 'Light', backgroundColor: '#fff', textColor: '#000' },
         { key: 'dark', label: 'Dark', backgroundColor: '#222', textColor: '#fff' },
     ];
 
 
-  useEffect(() => {
-    async function savetheme() {
-        if (theme) {
-            await AsyncStorage.setItem('theme', theme);
+    useEffect(() => {
+        async function savetheme() {
+            if (theme) {
+                await AsyncStorage.setItem('theme', theme);
+            }
         }
-    }
-    savetheme();
-}, [theme]);
-
-    
-useEffect(() => {
-    (async () => {
-    
-        const savedProfilePic = await AsyncStorage.getItem('profilePic');
-        if (savedProfilePic) {
-            setProfilePic(savedProfilePic);
-            setSelectedAvatar(null);
-        }
-    })();
-}, []);
-
-useEffect(() => {
-    //console.log(setProfilePic(profilePic));
-    dispatch(setProfileimg(profilePic));
-    if (profilePic) {   
-        AsyncStorage.setItem('profilePic', profilePic);
-        
-    }
-    
-}, [profilePic]);
-
-const pickImage = async () => {
-  let result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ["images"], // ✅ new way (array of strings)
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.7,
-  });
-
-  if (!result.canceled) {
-    setProfilePic(result.assets[0].uri);
-    setSelectedAvatar(null);
-
-    const newImages = [...uploadedImages, { uri: result.assets[0].uri }];
-    setUploadedImages(newImages);
-    await AsyncStorage.setItem("uploadedImages", JSON.stringify(newImages));
-  }
-};
+        savetheme();
+    }, [theme]);
 
 
+    useEffect(() => {
+        (async () => {
 
-    const renderAvatar = ({ item, index }) => (
-        <TouchableOpacity
-            onPress={() => {
-                if (item.uri) {
-                    setProfilePic(item.uri);
-                    setSelectedAvatar(null);
-                } else {
-                    setSelectedAvatar(index);
-                    setProfilePic(null);
+            const savedProfilePic = await AsyncStorage.getItem('profilePic');
+            if (savedProfilePic) {
+                setProfilePic(savedProfilePic);
+                if (savedProfilePic.startsWith('avatar:')) {
+                    setSelectedAvatar(parseInt(savedProfilePic.split(':')[1]));
                 }
-            }}
-            className="mx-2 "
-        >
-            <Image
-                source={item.uri ? { uri: item.uri } : item}
-                className={`w-[50px] h-[50px] rounded-full border-2 ${((item.uri && profilePic === item.uri) || (!item.uri && selectedAvatar === index)) ? 'border-blue-500' : 'border-gray-300'}`}
-            />
-        </TouchableOpacity>
-    );
+            }
+        })();
+    }, []);
+
+    useEffect(() => {
+        //console.log(setProfilePic(profilePic));
+        dispatch(setProfileimg(profilePic));
+        if (profilePic) {
+            AsyncStorage.setItem('profilePic', profilePic);
+
+        }
+
+    }, [profilePic]);
+
+    const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["images"], // ✅ new way (array of strings)
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.7,
+        });
+
+        if (!result.canceled) {
+            setProfilePic(result.assets[0].uri);
+            setSelectedAvatar(null);
+
+            const newImages = [...uploadedImages, { uri: result.assets[0].uri }];
+            setUploadedImages(newImages);
+            await AsyncStorage.setItem("uploadedImages", JSON.stringify(newImages));
+        }
+    };
+
+
+
+    const renderAvatar = ({ item, index }) => {
+        const isAvatar = !item.uri;
+        const currentId = isAvatar ? `avatar:${index}` : item.uri;
+        const isSelected = profilePic === currentId;
+
+        return (
+            <TouchableOpacity
+                onPress={() => {
+                    setProfilePic(currentId);
+                    if (isAvatar) setSelectedAvatar(index);
+                }}
+                className="mx-2 "
+            >
+                <Image
+                    source={isAvatar ? AVATARS[index] : { uri: item.uri }}
+                    className={`w-[50px] h-[50px] rounded-full border-2 ${isSelected ? 'border-blue-500' : 'border-gray-300'}`}
+                />
+            </TouchableOpacity>
+        );
+    };
 
     return (
-        <View className="flex-1 items-center px-6 py-6 mt-[30px]">
+        <View className="flex-1 items-center px-6 py-6" style={{ backgroundColor: THEMES_STYLE[Theme || 'light'].backgroundColor }}>
             {/* Profile Section */}
             <View className="w-full mb-4 flex flex-row h-[200px] bg-indigo-100 rounded-2xl p-5 shadow items-start">
                 <View className="items-center mr-4 relative">
                     {profilePic ? (
                         <Image
-                            source={{ uri: profilePic }}
+                            source={profilePic.startsWith('avatar:') ? AVATARS[parseInt(profilePic.split(':')[1])] : { uri: profilePic }}
                             className="w-[70px] h-[70px] rounded-full border-2 flex justify-center items-center border-gray-400"
-                        />
-                    ) : selectedAvatar !== null ? (
-                        <Image
-                            source={AVATARS[selectedAvatar]}
-                            className="w-[70px] h-[70px] rounded-full border-2 border-gray-400"
                         />
                     ) : (
                         <View className="w-[70px] h-[70px] rounded-full border-2 border-gray-400 bg-gray-200 items-center justify-center">
-                            <Text style={{ color: theme.textColor }}>No Image</Text>
+                            <Text style={{ color: THEMES_STYLE[Theme || 'light'].textColor }}>No Image</Text>
                         </View>
                     )}
                     <TouchableOpacity
                         onPress={pickImage}
                         className="absolute top-20 right-0  rounded-full bg-blue-500 h-[30px] w-[30px] p-1 flex items-center justify-center"
                     >
-                        <Text className='rounded-full'><AntDesign name="upload" color="white" size={20}/></Text>
+                        <AntDesign name="upload" color="white" size={20} />
                     </TouchableOpacity>
                 </View>
 
                 {/* Name and Avatars */}
                 <View className="flex-1 ml-2 ">
                     <View className="mb-2">
-                        <Text className="text-lg font-bold mb-1" style={{ color: theme.textColor }}>
+                        <Text className="text-lg font-bold mb-1" style={{ color: THEMES_STYLE[Theme || 'light'].textColor }}>
                             Name
                         </Text>
                         <NameInput />
@@ -172,7 +175,7 @@ const pickImage = async () => {
                         setProfilePic(null);
                         setSelectedAvatar(null);
                         setUploadedImages([]);
-                        
+
                     }}
                 >
                     <Text className="text-white font-bold">Erase All Data</Text>
@@ -193,11 +196,11 @@ function NameInput() {
     }, []);
     const onChange = async (val) => {
         setName(val);
-        console.log(val)
+        //        console.log(val)
         await AsyncStorage.setItem('profileName', val);
         dispatch(setUsername(val))
-        console.log(setUsername(val));
-        
+        //        console.log(setUsername(val));
+
     };
     return (
         <TextInput

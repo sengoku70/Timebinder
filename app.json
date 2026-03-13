@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "my-expo-app",
-    "slug": "my-expo-app",
+    "name": "TimeBinder",
+    "slug": "TimeBinder",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png",
@@ -30,11 +30,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.bvkr.myexpoapp"
+      "package": "com.bvkr.timebinder"
     },
     "extra": {
       "eas": {
-        "projectId": "2cc33d29-4c03-4106-84f9-5ac6c6d5d407"
+        "projectId": "2df393e4-c983-401e-b432-c21944b3e2ac"
       }
     }
   }

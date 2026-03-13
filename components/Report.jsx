@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Image, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import {BlurView} from 'expo-blur';
+import { BlurView } from 'expo-blur';
 
 export default function Report() {
   return (
@@ -9,7 +9,7 @@ export default function Report() {
       {/* Image container */}
       <View className="relative rounded-2xl overflow-hidden">
         <Image
-          source = {require("./adaptive-icon.png")} 
+          source={require("./adaptive-icon.png")}
           className="w-full h-full rounded-2xl"
           resizeMode="cover"
         />
@@ -22,9 +22,9 @@ export default function Report() {
 
         {/* Blur View at bottom */}
         <BlurView intensity={10} tint="light" className="absolute bottom-0 w-full h-20 rounded-2xl overflow-hidden" />
-        
+
       </View>
     </View>
-  );   
+  );
 }
 
