@@ -101,65 +101,73 @@ export default function Weekly() {
       </Text>
 
 
-      <ScrollView horizontal>
-        <View>
-          {/* Header Row */}
-          <View className="flex-row">
-            <View className="w-20" />
-            {days.map((day) => (
-              <View
-                key={day}
-                className={`w-28 p-2 border bg-blue-500 rounded-xl border-white`}
-              >
-                <Text className="text-center text-white font-semibold">{day}</Text>
+      <ScrollView className="flex-1">
+        <View className="flex-row relative">
+          
+          {/* Sticky Left Column (Times) */}
+          <View className="w-20 absolute left-0 top-0 z-10 bg-white shadow-sm border-r border-gray-200">
+            {/* Top-left empty corner */}
+            <View className="h-14" />
+            
+            {/* The Hours */}
+            {hours.map((hour) => (
+              <View key={`time-${hour}`} className="h-14 bg-blue-100 border-b border-gray-200 items-center justify-center px-1">
+                <Text className="text-blue-800 text-xs text-center font-medium">{hour}</Text>
               </View>
             ))}
-
           </View>
 
-
-
-          {/* Body */}
-          <ScrollView style={{ height: "85%" }}>
-
-            {hours.map((hour, hourIndex) => (
-              <View key={hour} className="flex-row" >
-                {/* Time Label */}
-                <View className="w-20 bg-blue-100 border border-gray-200 items-center justify-center px-1 py-2">
-                  <Text className="text-blue-800 text-xs text-center">{hour}</Text>
-                </View>
-
-                {/* Cells for each day */}
-                {days.map((day) => {
-                  const key = `${day}-${hour}`;
-                  //console.log(day);
-                  const isCurrent =
-                    currentTime.day === day && currentTime.hourIndex === hourIndex;
-
-                  return (
-                    <TouchableOpacity
-                      key={key}
-                      className={`w-28 h-14 border border-gray-200 items-center justify-center ${isCurrent ? "bg-blue-500" : currentTime.day == day ? "bg-blue-200" : "bg-white/40"
-                        } rounded-sm`}
-                      onPress={() => openEdit(day, hour)}
-                    >
-                      <Text
-                        className={`text-center px-1 ${isCurrent
-                          ? "text-white font-semibold"
-                          : routine[key]
-                            ? `text-${Theme === "dark" ? "white" : "blue-500"} `
-                            : "text-black/20"
-                          }`}
-                        numberOfLines={2}
-                      >
-                        {routine[key] || "Edit"}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+          {/* Horizontally Scrollable Content Area */}
+          <ScrollView horizontal className="ml-20 flex-1 border-l border-gray-200">
+            <View>
+              {/* Header Row (Days) */}
+              <View className="flex-row">
+                {days.map((day) => (
+                  <View
+                    key={day}
+                    className="w-28 h-14 p-2 border-b border-r bg-blue-500 border-blue-400 justify-center"
+                  >
+                    <Text className="text-center text-white font-semibold">{day}</Text>
+                  </View>
+                ))}
               </View>
-            ))}
+
+              {/* Body (Routine Cells) */}
+              {hours.map((hour, hourIndex) => (
+                <View key={`row-${hour}`} className="flex-row">
+                  {days.map((day) => {
+                    const key = `${day}-${hour}`;
+                    const isCurrent =
+                      currentTime.day === day && currentTime.hourIndex === hourIndex;
+
+                    return (
+                      <TouchableOpacity
+                        key={key}
+                        className={`w-28 h-14 border-b border-r border-gray-200 items-center justify-center p-1 ${
+                          isCurrent ? "bg-blue-500" : currentTime.day == day ? "bg-blue-200" : "bg-white/40"
+                        }`}
+                        onPress={() => openEdit(day, hour)}
+                      >
+                        <Text
+                          className={`text-center text-xs ${
+                            isCurrent
+                              ? "text-white font-semibold"
+                              : routine[key]
+                              ? `text-${Theme === "dark" ? "white" : "blue-700"}`
+                              : "text-gray-400"
+                          }`}
+                          numberOfLines={2}
+                        >
+                          {routine[key] || "Edit"}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ))}
+            </View>
           </ScrollView>
+
         </View>
       </ScrollView>
 

@@ -1,3 +1,6 @@
+import { installConsoleInterceptor } from './src/consoleLogger';
+installConsoleInterceptor(); // must be first — captures all logs in production APK
+
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import './global.css';

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, TextInput, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, Pressable, TextInput, TouchableOpacity, Modal } from 'react-native';
 import { AntDesign, Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { navigationRef } from '../src/navigation';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, clamp } from 'react-native-reanimated';
 
 const THEMES = {
@@ -76,11 +76,16 @@ const Routine = () => {
     }
   }, [templatesModel]);
 
-  const newheight = useSharedValue(180);
+  const newheight = useSharedValue(400);
+  const context = useSharedValue(400);
 
   const drag = Gesture.Pan()
+    .onBegin(() => {
+      context.value = newheight.value;
+    })
     .onUpdate((e) => {
-      newheight.value = 180 - e.translationY > 180 ? (180 - e.translationY) * 2 : 180;
+      const nextHeight = context.value - e.translationY;
+      newheight.value = nextHeight > 200 ? nextHeight : 200; // block from going too small
     });
 
   const style = useAnimatedStyle(() => ({
@@ -157,7 +162,7 @@ const Routine = () => {
       try {
         const stored = await AsyncStorage.getItem('rtitle');
         if (stored) setRtitle(JSON.parse(stored));
-        console.log(stored);
+        //console.log(stored);
       } catch (e) {
         //        console.log('Failed to load data', e);
       }
@@ -354,7 +359,7 @@ const Routine = () => {
                     </TouchableOpacity>
                   </View>
                 ) : (
-                  <ScrollView>
+                  <ScrollView contentContainerStyle={{ paddingBottom: 150 }} className="flex-1 mt-2">
                     {routineFiles.map(file => (
                       <TouchableOpacity
                         key={file.name}

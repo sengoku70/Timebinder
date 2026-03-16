@@ -1,26 +1,19 @@
 
 import React, { useEffect, useState } from "react";
-import { View, Text, Pressable, Platform,TextInput } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { View, Text, Pressable, Platform, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 
 
 export default function DateProgressBox() {
   const [goalDate, setGoalDate] = useState(null);
-  const [showPicker, setShowPicker] = useState(false);
+  const navigation = useNavigation();
   const [startDate,setstartDate]  = useState(null); 
   const [goalTitle,setGoalTitle]  = useState(null);
 
-  const onChange = (event, selectedDate) => {
-    setShowPicker(false); // close picker
-    if (selectedDate) {
-      setGoalDate(selectedDate);
-      if (!startDate) setstartDate(new Date()); // set start date only once
-      //console.log("Selected Date:", startDate);
-    }
-  };
+
 
 
   function getProgressPercentage(startDate, goalDate) {
@@ -89,45 +82,31 @@ useEffect(() => {
         </View>
         <View className="absolute right-1 flex-row  justify-between items-center h-full flex ">
 
-            <Pressable className="bg-blue-200/80 mx-2 h-[40px] w-fit rounded-full flex items-center justify-center" onPress={() => setGoalDate(null)}>
+            <View className="bg-blue-200/80 mx-2 h-[40px] w-fit rounded-full flex items-center justify-center">
               
               <TextInput
-                    className="placeholder:text-white rounded-xl p-3 text-base"
+                    className="placeholder:text-white rounded-xl p-3 text-base font-bold text-gray-800"
                     placeholder="Enter Goal Title"
                     value={goalTitle}
                     onChangeText={setGoalTitle}
                     multiline
                     textAlignVertical="top"
                   />
-            </Pressable>
+            </View>
 
             <Text  className="p-1 text-[14px] font-semibold rounded-xl text-gray-800">
              Goal: {formattedDate}
             </Text>
           
-            <Pressable className="bg-red-500 h-[40px] w-[40px] rounded-full flex items-center justify-center" onPress={() => {setGoalDate(null);setGoalTitle(null)}}>
-              <Text className="font-bold text-center text-[10px] text-white">Reset</Text> 
-            </Pressable>
-      
         </View>
       </View>
 
       ) : (
-        <Pressable onPress={() => setShowPicker(true)} className="w-full">
-          <View className="flex-row justify-center items-center gap-2 py-2">
+        <Pressable onPress={() => navigation.navigate("StudyPlan")} className="w-full h-full">
+          <View className="flex-row justify-center items-center gap-2 py-2 w-full h-full">
             <Feather name="target" size={22} color="#333" />
-            <Text className="text-base text-gray-700">Select a target date</Text>
+            <Text className="text-base text-gray-700">Generate a Study Plan to track your Goal</Text>
           </View>
-
-          {showPicker && (
-            <DateTimePicker
-              value={goalDate || new Date()}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              minimumDate={new Date()}
-              onChange={onChange}
-            />
-          )}
         </Pressable>
       )}
     </View>

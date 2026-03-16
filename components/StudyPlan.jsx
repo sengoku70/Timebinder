@@ -151,6 +151,8 @@ export default function StudyPlan() {
 
         setPlan(generatedPlan);
         await saveStudyPlanToDB(generatedPlan);
+        await AsyncStorage.setItem("startDate", today.toISOString());
+        await AsyncStorage.setItem("goalDate", target.toISOString());
 
         if (totalTopicsRemaining > 0) {
             Alert.alert('Warning', 'Could not fit all topics in the given timeframe. Try increasing study hours or extending the goal date.');

@@ -214,32 +214,82 @@ function Layout() {
 
   const toggleBottom = () => {
     const isVisible = bottomAnim.__getValue() === 0;
+    const nextRetract = !retract && isVisible;
+    
+    // Stop any existing animations
+    bottomAnim.stopAnimation();
+    OpacityAnim.stopAnimation();
 
-    if (!retract && isVisible) {
+    if (nextRetract) {
       setRetract(true);
+      Animated.sequence([
+        Animated.timing(bottomAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.delay(1500),
+        Animated.parallel([
+          Animated.timing(bottomAnim, {
+            toValue: -width * 0.76,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(OpacityAnim, {
+            toValue: 0.3,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ])
+      ]).start();
     } else {
       setRetract(false);
+      Animated.parallel([
+        Animated.timing(bottomAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(OpacityAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        })
+      ]).start();
     }
+  };
+
+  const triggerRetractTimer = () => {
+    // If it's fully open, we don't auto-close it when an icon is tapped since we want 
+    // it to stay open until closed via toggle. But if it's already retracted (either pill size or 90% hidden), 
+    // we just want to reset the pill size, wait 1.5s, and hide it again.
+    if (!retract) return;
+    
+    bottomAnim.stopAnimation();
+    OpacityAnim.stopAnimation();
+
+    // Ensure retract state is true for the pill size
+    setRetract(true);
+
+    // Reset to pill size (bottomAnim=0, OpacityAnim=1)
+    bottomAnim.setValue(0);
+    OpacityAnim.setValue(1);
 
     Animated.sequence([
-      Animated.timing(bottomAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.delay(retract ? 0 : 2500),
-      Animated.timing(bottomAnim, {
-        toValue: retract ? 0 : -width * 0.75,
-        duration: 400,
-        useNativeDriver: true,
-      })
+      Animated.delay(1500),
+      Animated.parallel([
+        Animated.timing(bottomAnim, {
+          toValue: -width * 0.76,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(OpacityAnim, {
+          toValue: 0.3,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ])
     ]).start();
-
-    Animated.timing(OpacityAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
   };
 
   return (
@@ -294,7 +344,7 @@ function Layout() {
         >
           <TouchableOpacity
             className="flex-1 items-center justify-center py-2"
-            onPress={() => { navigationRef.navigate("Home"); setRetract(false); }}
+            onPress={() => { navigationRef.navigate("Home"); triggerRetractTimer(); }}
           >
             <View style={activeTab === 'Home' && !retract ? { backgroundColor: THEMES[Theme || 'light'].activeColor, borderRadius: 999, padding: 10 } : { padding: 10 }}>
               <Feather
@@ -307,7 +357,7 @@ function Layout() {
 
           <TouchableOpacity
             className="flex-1 items-center justify-center py-2"
-            onPress={() => { navigationRef.navigate("StudyPlan"); setRetract(false); }}
+            onPress={() => { navigationRef.navigate("StudyPlan"); triggerRetractTimer(); }}
           >
             <View style={activeTab === 'StudyPlan' && !retract ? { backgroundColor: THEMES[Theme || 'light'].activeColor, borderRadius: 999, padding: 10 } : { padding: 10 }}>
               <View style={{ position: 'relative' }}>
@@ -328,7 +378,7 @@ function Layout() {
 
           <TouchableOpacity
             className="flex-1 items-center justify-center py-2"
-            onPress={() => { navigationRef.navigate("Routine"); setRetract(false); }}
+            onPress={() => { navigationRef.navigate("Routine"); triggerRetractTimer(); }}
           >
             <View style={activeTab === 'Routine' && !retract ? { backgroundColor: THEMES[Theme || 'light'].activeColor, borderRadius: 999, padding: 10 } : { padding: 10 }}>
               <Feather
@@ -341,7 +391,7 @@ function Layout() {
 
           <TouchableOpacity
             className="flex-1 items-center justify-center py-2"
-            onPress={() => { navigationRef.navigate("Syllabus"); setRetract(false); }}
+            onPress={() => { navigationRef.navigate("Syllabus"); triggerRetractTimer(); }}
           >
             <View style={activeTab === 'Syllabus' && !retract ? { backgroundColor: THEMES[Theme || 'light'].activeColor, borderRadius: 999, padding: 10 } : { padding: 10 }}>
               <Feather

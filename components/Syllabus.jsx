@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, KeyboardAvoidingView, Platform, Animated as RNAnimated } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Modal, KeyboardAvoidingView, Platform, Animated as RNAnimated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Feather, AntDesign } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
@@ -9,7 +9,7 @@ const THEMES = {
   light: { label: 'Light', backgroundColor: '#fff', textColor: '#000' },
   dark: { label: 'Dark', backgroundColor: '#222', textColor: '#fff' },
 };
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, clamp } from 'react-native-reanimated';
 import { loadSyllabusFromDB, saveSyllabusToDB } from '../src/db';
 
@@ -92,7 +92,20 @@ export default function App() {
         try { parsedData = JSON.parse(parsedData); } catch (e) { }
       }
       if (Array.isArray(parsedData)) {
-        setData(prevData => [...prevData, ...parsedData]);
+        // Generate entirely fresh unique IDs to avoid SQLite collision
+        const uniqueData = parsedData.map(subject => ({
+          ...subject,
+          id: id('s_'),
+          chapters: (subject.chapters || []).map(chapter => ({
+            ...chapter,
+            id: id('c_'),
+            topics: (chapter.topics || []).map(topic => ({
+              ...topic,
+              id: id('t_')
+            }))
+          }))
+        }));
+        setData(prevData => [...prevData, ...uniqueData]);
       } else {
         alert('Invalid syllabus format received.');
       }
@@ -106,15 +119,17 @@ export default function App() {
     }
   };
 
-  const newheight = useSharedValue(180);
+  const newheight = useSharedValue(400);
+  const context = useSharedValue(400);
 
   const drag = Gesture.Pan()
-    .onUpdate((e) => {
-      newheight.value = 180 - e.translationY > 180 ? (180 - e.translationY) * 2 : 180;
-      //newheight.value =  (120 - e.translationY)*2;
-      //console.log(newheight.value);
-
+    .onBegin(() => {
+      context.value = newheight.value;
     })
+    .onUpdate((e) => {
+      const nextHeight = context.value - e.translationY;
+      newheight.value = nextHeight > 200 ? nextHeight : 200; // block from going too small
+    });
 
 
 
@@ -144,6 +159,15 @@ export default function App() {
       if (!loading) isFirstRender.current = false;
       return;
     }
+
+    // Log syllabus titles to the debug console
+    if (data && data.length > 0) {
+      const titles = data.map(subject => subject.title).join(', ');
+      console.log(`[Syllabus] Loaded subjects: ${titles}`);
+    } else {
+      console.log(`[Syllabus] No subjects loaded yet.`);
+    }
+
     saveSyllabusToDB(data);
   }, [data, loading]);
 
@@ -493,7 +517,7 @@ export default function App() {
                     </TouchableOpacity>
                   </View>
                 ) : (
-                  <ScrollView>
+                  <ScrollView contentContainerStyle={{ paddingBottom: 150 }} className="flex-1 mt-2">
                     {filteredFiles.map(file => (
                       <TouchableOpacity
                         key={file.name}
